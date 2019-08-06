@@ -1,0 +1,31 @@
+FROM continuumio/miniconda
+
+USER root
+
+## os dependencies
+RUN apt-get update &&\
+    apt-get install -y build-essential jq &&\
+    pip install yq
+
+## Environment var config
+ENV CONDA_DIR /opt/conda
+ENV PATH $CONDA_DIR/bin:$CONDA_DIR:$PATH
+
+## Conda environment installation and kernal register
+ENV ENVIRONMENT=/environment.yml
+ADD environment.yml $ENVIRONMENT
+RUN conda create --name $(cat $ENVIRONMENT | yq -r .name ) --clone base && \
+  conda env update -f /environment.yml && \
+  conda clean -afy
+
+## Run environment on start
+RUN echo "source activate $(cat $ENVIRONMENT | yq -r .name )" > /home/${USER}/.bashrc
+
+## Add conda environment as kernel
+RUN bash -c "source activate $(cat $ENVIRONMENT | yq -r .name ) &&\
+             python -m ipykernel install --user \
+                                         --name $(cat $ENVIRONMENT | yq -r .name ) \
+                                         --display-name $(cat $ENVIRONMENT | yq -r .name )"
+
+## Final user setup
+CMD ["bash", "-ic", "source activate $(cat $ENVIRONMENT | yq -r .name ) && jupyter notebook --notebook-dir=/mnt --ip=0.0.0.0 --no-browser --port=8888 --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*' --allow-root"]

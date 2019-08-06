@@ -1,0 +1,14 @@
+name: deepfakedetector
+dependencies:
+- jupyterlab=0.35.4
+- pyviz/label/dev::pyviz=0.10.0
+- pyviz/label/dev::hvplot=0.4.0
+- pip
+- pip:
+    - tensorflow==2.0.0-beta1
+    - stingray
+    - sklearn
+    - jupyter
+    - ipython
+    - matplotlib
+    - nbformat
